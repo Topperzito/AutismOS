@@ -8,6 +8,7 @@ set -euo pipefail
 DIALOG=dialog
 PKG_MANAGER=""
 SYSTEMD_AVAILABLE=0
+PKG_MANAGER_SELECTED=0
 
 ### ============================
 ### Helpers
@@ -55,7 +56,14 @@ detect_systemd() {
 detect_pkg_managers() {
   local options=()
 
-  command -v pacman && options+=(pacman "Arch Linux")
+  [[ $PKG_MANAGER_SELECTED -eq 1 ]] && return
+
+  if command -v pacman >/dev/null; then
+    PKG_MANAGER="$(select_arch_helper)"
+    PKG_MANAGER_SELECTED=1
+    return
+  fi
+
   command -v apt && options+=(apt "Debian/Ubuntu")
   command -v dnf && options+=(dnf "Fedora")
   command -v zypper && options+=(zypper "openSUSE")
@@ -68,6 +76,60 @@ detect_pkg_managers() {
   PKG_MANAGER=$(menu "Select package manager" "${options[@]}")
 }
 
+select_arch_helper() {
+  local choice
+
+  choice=$(menu "Arch Linux detected. Select package manager:" \
+    pacman "Official repos only" \
+    paru   "AUR helper (recommended)" \
+    yay    "AUR helper")
+
+  case "$choice" in
+    pacman)
+      echo pacman
+      ;;
+    paru|yay)
+      ensure_aur_helper "$choice"
+      echo "$choice"
+      ;;
+    *)
+      die "Invalid Arch package manager selection"
+      ;;
+  esac
+}
+
+ensure_aur_helper() {
+  local helper="$1"
+  local builddir user home
+
+  if command -v "$helper" >/dev/null; then
+    return
+  fi
+
+  user="${SUDO_USER:?AUR helpers must be built as a normal user}"
+  home="$(getent passwd "$user" | cut -d: -f6)"
+
+  msg "$helper not found. Installing..."
+
+  pacman -Sy --needed --noconfirm base-devel git
+
+  sudo -v
+
+  sudo -u "$user" bash <<EOF
+set -e
+
+builddir="\$(mktemp -d "\$HOME/.cache/${helper}.XXXXXX")"
+cd "\$builddir"
+
+git clone https://aur.archlinux.org/${helper}.git
+cd ${helper}
+
+makepkg -si --noconfirm
+EOF
+}
+
+
+
 ### ============================
 ### Package installation
 ### ============================
@@ -76,6 +138,12 @@ install_packages() {
   case "$PKG_MANAGER" in
     pacman)
       pacman -Sy --noconfirm mariadb dialog
+      ;;
+    paru)
+      paru -Sy --noconfirm mariadb dialog
+      ;;
+    yay)
+      yay -Sy --noconfirm mariadb dialog
       ;;
     apt)
       apt update
