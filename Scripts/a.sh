@@ -71,12 +71,18 @@ for IP in $LIVE_HOSTS; do
       read -rp "    Connect now? (y/N): " ANSWER
       if [[ "$ANSWER" =~ ^[Yy]$ ]]; then
         echo "▶ Connecting to $IP..."
-        ssh "$USER@$IP"
+        sshpass -p "$PASS" ssh \
+          -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -o PreferredAuthentications=password \
+          -o PubkeyAuthentication=no \
+          "$USER@$IP"
         exit 0
       else
         echo "    ↪ Skipping connection, continuing scan"
         break
       fi
+
     fi
   done
 
