@@ -24,21 +24,29 @@ process_directory() {
 }
 
 ########################################
+# Extract Marker (pattern-based)
+########################################
+
+extract_marker() {
+    local file="$1"
+
+    # Grep last matching marker pattern anywhere in file
+    grep -oE '#<--\[.*\]-->#' "$file" | tail -n 1 || true
+}
+
+########################################
 # File Processor
 ########################################
 
 process_file() {
     local file="$1"
 
-    # Check for marker safely
-    if ! tail -n 1 -- "$file" 2>/dev/null | grep -q '^#<--\[.*\]-->#$'; then
-        return 0
-    fi
-
-    # Extract marker
     local marker
-    marker="$(tail -n 1 -- "$file")"
+    marker="$(extract_marker "$file")"
 
+    [[ -z "$marker" ]] && return 0
+
+    # Extract inside of marker
     local raw
     raw="${marker#\#<--[}"
     raw="${raw%]-->#}"
@@ -68,10 +76,18 @@ process_file() {
     TARGET="$target_dir"
     CHMOD="$chmod_value"
 
-    # For text types → strip marker
-    if [[ "$type_value" != "deployable-archive" && "$type_value" != "archive" ]]; then
+    ########################################
+    # Prepare TMPFILE safely
+    ########################################
+
+    if [[ "$type_value" != "deployable-archive" && \
+          "$type_value" != "archive" ]]; then
+
         TMPFILE="$(mktemp)"
-        sed '$d' -- "$SOURCE" > "$TMPFILE"
+
+        # Remove marker line only (not blindly last line)
+        sed "/#<--\\[.*\\]-->#/d" -- "$SOURCE" > "$TMPFILE"
+
     else
         TMPFILE="$SOURCE"
     fi
@@ -81,40 +97,56 @@ process_file() {
 
     local plugin_file="$PLUGIN_DIR/$type_value.json"
 
+    ########################################
+    # Plugin Execution
+    ########################################
+
     if [[ -f "$plugin_file" ]]; then
 
-        # Preferred: script-based plugin
         plugin_script="$(jq -r '.script // empty' "$plugin_file")"
 
         if [[ -n "$plugin_script" ]]; then
+
             if [[ -f "$PLUGIN_DIR/$plugin_script" ]]; then
+
                 env SOURCE="$SOURCE" \
                     TARGET="$TARGET" \
                     CHMOD="$CHMOD" \
                     BASENAME="$BASENAME" \
                     TMPFILE="$TMPFILE" \
+                    SCRIPT_DIR="$SCRIPT_DIR" \
                     bash "$PLUGIN_DIR/$plugin_script"
 
             else
                 echo "Plugin script not found: $PLUGIN_DIR/$plugin_script"
                 exit 1
             fi
+
         else
-            # Fallback: command-based plugin
             command_template="$(jq -r '.command // empty' "$plugin_file")"
+
             if [[ -z "$command_template" ]]; then
                 echo "Invalid plugin definition: $plugin_file"
                 exit 1
             fi
+
             bash -c "$command_template"
         fi
 
     else
-        echo "Plugin not found for type '$type_value', using default installer."
+        ########################################
+        # Default Fallback
+        ########################################
+        echo "  → plugin not found, using default installer"
+
         install -m "$CHMOD" \
             -- "$TMPFILE" \
             "$TARGET/$BASENAME"
     fi
+
+    ########################################
+    # Cleanup
+    ########################################
 
     if [[ "$TMPFILE" != "$SOURCE" ]]; then
         rm -f -- "$TMPFILE"
@@ -122,7 +154,7 @@ process_file() {
 }
 
 ########################################
-# Run
+# Run Initial Scan
 ########################################
 
 while IFS= read -r -d '' file; do
