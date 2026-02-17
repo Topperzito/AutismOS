@@ -1,0 +1,5 @@
+{
+  "name": "deployable-archive",
+  "description": "Extract archive into target and recursively process unpacked files.",
+  "script": "deployable-archive.sh"
+}

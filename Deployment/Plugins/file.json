@@ -1,0 +1,3 @@
+{
+  "command": "install -m \"$CHMOD\" -- \"$TMPFILE\" \"$TARGET/$BASENAME\""
+}

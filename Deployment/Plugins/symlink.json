@@ -1,0 +1,5 @@
+{
+  "name":"symlink",
+  "description":"A format to unpack symlinks",
+  "command": "ln -sfn -- \"$(realpath -- \"$SOURCE\")\" \"$TARGET/$BASENAME\""
+}

@@ -1,0 +1,5 @@
+{
+  "name":"archive",
+  "description":"A basic flag for the archives decompressing",
+  "command": "tar -xf -- \"$TMPFILE\" -C \"$TARGET\""
+}

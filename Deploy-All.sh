@@ -1,66 +1,132 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Resolve script directory (repo root assumed)
+########################################
+# Initialization
+########################################
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 cd "$SCRIPT_DIR"
 
+PLUGIN_DIR="$SCRIPT_DIR/Deployment/Plugins"
+
 echo "Scanning from: $SCRIPT_DIR"
 
-# Process files safely (handles spaces, newlines, weird names)
-while IFS= read -r -d '' file; do
-    last_line="$(tail -n 1 -- "$file" 2>/dev/null || true)"
+########################################
+# Recursive Processor
+########################################
 
-    # Match marker format: #<--[ ... ]-->
-    if [[ "$last_line" =~ ^#\<--\[(.*)\]--\># ]]; then
-        raw="${BASH_REMATCH[1]}"
+process_directory() {
+    local dir="$1"
+    while IFS= read -r -d '' f; do
+        process_file "$f"
+    done < <(find "$dir" -type f -print0)
+}
 
-        IFS='|' read -r -a parts <<< "$raw"
+########################################
+# File Processor
+########################################
 
-        target_dir="${parts[0]/#\~/$HOME}"
-        chmod_value="644"
-        type_value="file"
+process_file() {
+    local file="$1"
 
-        # Parse optional flags
-        for part in "${parts[@]:1}"; do
-            case "$part" in
-                chmod=*) chmod_value="${part#chmod=}" ;;
-                type=*)  type_value="${part#type=}"  ;;
-            esac
-        done
-
-        echo "Deploying $file -> $target_dir"
-        echo "  chmod=$chmod_value"
-        echo "  type=$type_value"
-
-        mkdir -p -- "$target_dir"
-
-        tmpfile="$(mktemp)"
-        sed '$d' -- "$file" > "$tmpfile"
-
-        case "$type_value" in
-            archive)
-                tar -xf -- "$tmpfile" -C "$target_dir"
-                ;;
-            symlink)
-                ln -sfn -- "$(realpath -- "$file")" \
-                    "$target_dir/$(basename -- "$file")"
-                ;;
-            file)
-                install -m "$chmod_value" \
-                    -- "$tmpfile" \
-                    "$target_dir/$(basename -- "$file")"
-                ;;
-            *)
-                echo "Unknown type: $type_value"
-                rm -f -- "$tmpfile"
-                exit 1
-                ;;
-        esac
-
-        rm -f -- "$tmpfile"
+    # Check for marker safely
+    if ! tail -n 1 -- "$file" 2>/dev/null | grep -q '^#<--\[.*\]-->#$'; then
+        return 0
     fi
 
-done < <(find . -type f ! -path "*/.git/*" -print0)
+    # Extract marker
+    local marker
+    marker="$(tail -n 1 -- "$file")"
 
-echo "Done."
+    local raw
+    raw="${marker#\#<--[}"
+    raw="${raw%]-->#}"
+
+    IFS='|' read -r -a parts <<< "$raw"
+
+    local target_dir="${parts[0]/#\~/$HOME}"
+    local chmod_value="644"
+    local type_value="file"
+
+    for part in "${parts[@]:1}"; do
+        case "$part" in
+            chmod=*) chmod_value="${part#chmod=}" ;;
+            type=*)  type_value="${part#type=}" ;;
+        esac
+    done
+
+    echo "Deploying: $file"
+    echo "  → target: $target_dir"
+    echo "  → type:   $type_value"
+    echo "  → chmod:  $chmod_value"
+
+    mkdir -p -- "$target_dir"
+
+    BASENAME="$(basename -- "$file")"
+    SOURCE="$file"
+    TARGET="$target_dir"
+    CHMOD="$chmod_value"
+
+    # For text types → strip marker
+    if [[ "$type_value" != "deployable-archive" && "$type_value" != "archive" ]]; then
+        TMPFILE="$(mktemp)"
+        sed '$d' -- "$SOURCE" > "$TMPFILE"
+    else
+        TMPFILE="$SOURCE"
+    fi
+
+    export SOURCE TARGET CHMOD BASENAME TMPFILE SCRIPT_DIR
+    export -f process_directory
+
+    local plugin_file="$PLUGIN_DIR/$type_value.json"
+
+    if [[ -f "$plugin_file" ]]; then
+
+        # Preferred: script-based plugin
+        plugin_script="$(jq -r '.script // empty' "$plugin_file")"
+
+        if [[ -n "$plugin_script" ]]; then
+            if [[ -f "$PLUGIN_DIR/$plugin_script" ]]; then
+                env SOURCE="$SOURCE" \
+                    TARGET="$TARGET" \
+                    CHMOD="$CHMOD" \
+                    BASENAME="$BASENAME" \
+                    TMPFILE="$TMPFILE" \
+                    bash "$PLUGIN_DIR/$plugin_script"
+
+            else
+                echo "Plugin script not found: $PLUGIN_DIR/$plugin_script"
+                exit 1
+            fi
+        else
+            # Fallback: command-based plugin
+            command_template="$(jq -r '.command // empty' "$plugin_file")"
+            if [[ -z "$command_template" ]]; then
+                echo "Invalid plugin definition: $plugin_file"
+                exit 1
+            fi
+            bash -c "$command_template"
+        fi
+
+    else
+        echo "Plugin not found for type '$type_value', using default installer."
+        install -m "$CHMOD" \
+            -- "$TMPFILE" \
+            "$TARGET/$BASENAME"
+    fi
+
+    if [[ "$TMPFILE" != "$SOURCE" ]]; then
+        rm -f -- "$TMPFILE"
+    fi
+}
+
+########################################
+# Run
+########################################
+
+while IFS= read -r -d '' file; do
+    process_file "$file"
+done < <(find "$SCRIPT_DIR" -type f ! -path "*/.git/*" -print0)
+
+echo "Deployment complete."
