@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Eclipse-X11
+Comment=Eclipse forced to run under X11 backend
+Exec=env GDK_BACKEND=x11 QT_QPA_PLATFORM=xcb XDG_SESSION_TYPE=x11 eclipse
+Icon=eclipse
+Terminal=false
+Type=Application
+Categories=Development;IDE;
+StartupNotify=true
+#<--[~/.local/share/applications]-->#
