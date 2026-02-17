@@ -1,0 +1,11 @@
+deploy.sh — Marker-Based File Deployment
+
+DESCRIPTION
+
+This script scans all files in the repository.
+If the LAST line of a file matches a special marker format,
+the file is deployed according to that marker.
+
+Files without a valid marker are ignored.
+
+Permissions must be numeric (e.g., 755, 644).
