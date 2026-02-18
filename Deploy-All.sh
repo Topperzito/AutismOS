@@ -12,27 +12,28 @@ PLUGIN_DIR="$SCRIPT_DIR/Deployment/Plugins"
 
 echo "Scanning from: $SCRIPT_DIR"
 
+DEPLOY_ROOTS=(
+  "$SCRIPT_DIR/Configs"
+  "$SCRIPT_DIR/Apps-Workarounds"
+  "$SCRIPT_DIR/Files"
+  "$SCRIPT_DIR/Tests"
+)
+
+
 ########################################
 # Recursive Processor
 ########################################
 
 process_directory() {
     local dir="$1"
-    while IFS= read -r -d '' f; do
-        process_file "$f"
-    done < <(find "$dir" -type f -print0)
+
+    while IFS= read -r -d '' file; do
+        process_file "$file"
+    done < <(
+        find "$dir" -type f -print0
+    )
 }
 
-########################################
-# Extract Marker (pattern-based)
-########################################
-
-extract_marker() {
-    local file="$1"
-
-    # Grep last matching marker pattern anywhere in file
-    grep -oE '#<--\[.*\]-->#' "$file" | tail -n 1 || true
-}
 
 ########################################
 # File Processor
@@ -41,73 +42,82 @@ extract_marker() {
 process_file() {
     local file="$1"
 
-    local marker
-    marker="$(extract_marker "$file")"
+    # Extract ALL markers anywhere in file
+    local markers
+    markers="$(grep -oE '#<--\[.*\]-->#' "$file" || true)"
 
-    [[ -z "$marker" ]] && return 0
+    [[ -z "$markers" ]] && return 0
 
-    # Extract inside of marker
-    local raw
-    raw="${marker#\#<--[}"
-    raw="${raw%]-->#}"
+    while IFS= read -r marker; do
 
-    IFS='|' read -r -a parts <<< "$raw"
+        # Strip wrapper
+        local raw
+        raw="${marker#\#<--[}"
+        raw="${raw%]-->#}"
 
-    local target_dir="${parts[0]/#\~/$HOME}"
-    local chmod_value="644"
-    local type_value="file"
+        IFS='|' read -r -a parts <<< "$raw"
 
-    for part in "${parts[@]:1}"; do
-        case "$part" in
-            chmod=*) chmod_value="${part#chmod=}" ;;
-            type=*)  type_value="${part#type=}" ;;
-        esac
-    done
+        local target_dir="${parts[0]/#\~/$HOME}"
+        local chmod_value="644"
+        local type_value="file"
 
-    echo "Deploying: $file"
-    echo "  → target: $target_dir"
-    echo "  → type:   $type_value"
-    echo "  → chmod:  $chmod_value"
+        for part in "${parts[@]:1}"; do
+            case "$part" in
+                chmod=*) chmod_value="${part#chmod=}" ;;
+                type=*)  type_value="${part#type=}" ;;
+            esac
+        done
 
-    mkdir -p -- "$target_dir"
+        echo "Deploying: $file"
+        echo "  → target: $target_dir"
+        echo "  → type:   $type_value"
+        echo "  → chmod:  $chmod_value"
 
-    BASENAME="$(basename -- "$file")"
-    SOURCE="$file"
-    TARGET="$target_dir"
-    CHMOD="$chmod_value"
+        mkdir -p -- "$target_dir"
 
-    ########################################
-    # Prepare TMPFILE safely
-    ########################################
+        local BASENAME
+        BASENAME="$(basename -- "$file")"
 
-    if [[ "$type_value" != "deployable-archive" && \
-          "$type_value" != "archive" ]]; then
+        local SOURCE="$file"
+        local TARGET="$target_dir"
+        local CHMOD="$chmod_value"
+        local TMPFILE
 
-        TMPFILE="$(mktemp)"
+        ########################################
+        # Prepare file copy
+        ########################################
 
-        # Remove marker line only (not blindly last line)
-        sed "/#<--\\[.*\\]-->#/d" -- "$SOURCE" > "$TMPFILE"
+        if [[ "$type_value" != "deployable-archive" && \
+              "$type_value" != "archive" ]]; then
 
-    else
-        TMPFILE="$SOURCE"
-    fi
+            TMPFILE="$(mktemp)"
 
-    export SOURCE TARGET CHMOD BASENAME TMPFILE SCRIPT_DIR
-    export -f process_directory
+            # Remove ALL marker lines safely
+            sed '/#<--\[.*\]-->#/d' -- "$SOURCE" > "$TMPFILE"
 
-    local plugin_file="$PLUGIN_DIR/$type_value.json"
+        else
+            TMPFILE="$SOURCE"
+        fi
 
-    ########################################
-    # Plugin Execution
-    ########################################
+        ########################################
+        # Export environment for plugins
+        ########################################
 
-    if [[ -f "$plugin_file" ]]; then
+        export SOURCE TARGET CHMOD BASENAME TMPFILE SCRIPT_DIR
+        export -f process_directory
 
-        plugin_script="$(jq -r '.script // empty' "$plugin_file")"
+        local plugin_file="$PLUGIN_DIR/$type_value.json"
 
-        if [[ -n "$plugin_script" ]]; then
+        ########################################
+        # Plugin execution
+        ########################################
 
-            if [[ -f "$PLUGIN_DIR/$plugin_script" ]]; then
+        if [[ -f "$plugin_file" ]]; then
+
+            local plugin_script
+            plugin_script="$(jq -r '.script // empty' "$plugin_file")"
+
+            if [[ -n "$plugin_script" && -f "$PLUGIN_DIR/$plugin_script" ]]; then
 
                 env SOURCE="$SOURCE" \
                     TARGET="$TARGET" \
@@ -118,47 +128,51 @@ process_file() {
                     bash "$PLUGIN_DIR/$plugin_script"
 
             else
-                echo "Plugin script not found: $PLUGIN_DIR/$plugin_script"
-                exit 1
+                local command_template
+                command_template="$(jq -r '.command // empty' "$plugin_file")"
+
+                if [[ -z "$command_template" ]]; then
+                    echo "Invalid plugin definition: $plugin_file"
+                    exit 1
+                fi
+
+                bash -c "$command_template"
             fi
 
         else
-            command_template="$(jq -r '.command // empty' "$plugin_file")"
+            ########################################
+            # Default fallback installer
+            ########################################
 
-            if [[ -z "$command_template" ]]; then
-                echo "Invalid plugin definition: $plugin_file"
-                exit 1
-            fi
+            echo "  → plugin not found, using default installer"
 
-            bash -c "$command_template"
+            install -m "$CHMOD" \
+                -- "$TMPFILE" \
+                "$TARGET/$BASENAME"
         fi
 
-    else
         ########################################
-        # Default Fallback
+        # Cleanup
         ########################################
-        echo "  → plugin not found, using default installer"
 
-        install -m "$CHMOD" \
-            -- "$TMPFILE" \
-            "$TARGET/$BASENAME"
-    fi
+        if [[ "$TMPFILE" != "$SOURCE" ]]; then
+            rm -f -- "$TMPFILE"
+        fi
 
-    ########################################
-    # Cleanup
-    ########################################
-
-    if [[ "$TMPFILE" != "$SOURCE" ]]; then
-        rm -f -- "$TMPFILE"
-    fi
+    done <<< "$markers"
 }
 
 ########################################
-# Run Initial Scan
+# Initial Scan
 ########################################
+for root in "${DEPLOY_ROOTS[@]}"; do
+    [[ -d "$root" ]] || continue
 
-while IFS= read -r -d '' file; do
-    process_file "$file"
-done < <(find "$SCRIPT_DIR" -type f ! -path "*/.git/*" -print0)
+    while IFS= read -r -d '' file; do
+        process_file "$file"
+    done < <(
+        find "$root" -type f -print0
+    )
+done
 
 echo "Deployment complete."

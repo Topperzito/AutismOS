@@ -5,15 +5,26 @@ set -euo pipefail
 : "${TARGET:?TARGET not set}"
 : "${SCRIPT_DIR:?SCRIPT_DIR not set}"
 
+echo "  → validating archive"
+
+if ! file --mime-type "$SOURCE" | grep -Eq 'application/(x-tar|gzip|x-gzip|x-xz|x-bzip2)'; then
+    echo "  → Not a valid tar archive, skipping."
+    exit 0
+fi
+
 echo "  → extracting archive"
 
-# Allow trailing metadata
-tar -xzf "$SOURCE" -C "$TARGET" || true
+if ! tar -xf "$SOURCE" -C "$TARGET"; then
+    echo "  → extraction failed."
+    exit 1
+fi
 
-if [[ -f "$TARGET/___archived-meta___" ]]; then
+manifest="$TARGET/___archived-meta___"
+
+if [[ -f "$manifest" ]]; then
     echo "  → manifest detected"
 
-    jq -c '.deploy[]' "$TARGET/___archived-meta___" | while read -r entry; do
+    jq -c '.deploy[]' "$manifest" | while read -r entry; do
         SRC=$(echo "$entry" | jq -r '.source')
         DEST=$(echo "$entry" | jq -r '.target')
         TYPE=$(echo "$entry" | jq -r '.type // "file"')
@@ -24,13 +35,19 @@ if [[ -f "$TARGET/___archived-meta___" ]]; then
 
         case "$TYPE" in
             file)
-                install -m "$MODE" "$TARGET/$SRC" "$DEST_EXPANDED/$(basename "$SRC")"
+                install -m "$MODE" \
+                    "$TARGET/$SRC" \
+                    "$DEST_EXPANDED/$(basename "$SRC")"
                 ;;
             symlink)
-                ln -sfn "$TARGET/$SRC" "$DEST_EXPANDED/$(basename "$SRC")"
+                ln -sfn \
+                    "$TARGET/$SRC" \
+                    "$DEST_EXPANDED/$(basename "$SRC")"
                 ;;
             directory)
-                cp -r "$TARGET/$SRC" "$DEST_EXPANDED/"
+                cp -r \
+                    "$TARGET/$SRC" \
+                    "$DEST_EXPANDED/"
                 ;;
             *)
                 echo "Unknown manifest type: $TYPE"
@@ -39,5 +56,5 @@ if [[ -f "$TARGET/___archived-meta___" ]]; then
     done
 else
     echo "  → no manifest found, scanning recursively"
-    "$SCRIPT_DIR/Deploy-All.sh" --scan-dir "$TARGET"
+    process_directory "$TARGET"
 fi
