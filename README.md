@@ -1,4 +1,5 @@
 # AutismOS
+<img width="332" height="332" alt="image" src="https://github.com/user-attachments/assets/890ae6eb-0c9e-40ba-a17c-33d9723a2798" />
 
 A small ecosystem of scripts, configs and deployment tools.
 
