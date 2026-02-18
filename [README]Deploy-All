@@ -1,11 +1,52 @@
-deploy.sh — Marker-Based File Deployment
+# Deploy-All.sh
 
-DESCRIPTION
+Main orchestration script for the deployment engine.
 
-This script scans all files in the repository.
-If the LAST line of a file matches a special marker format,
-the file is deployed according to that marker.
+It:
 
-Files without a valid marker are ignored.
+1. Validates required dependencies
+2. Loads plugin definitions
+3. Executes deployment operations
+4. Handles archives, files and symlinks
 
-Permissions must be numeric (e.g., 755, 644).
+---
+
+## How It Works
+
+Deployment behavior is defined via JSON plugins in:
+
+Deployment/Plugins/
+
+The script delegates execution based on plugin `name`.
+
+No magic.
+No dependency resolution.
+No rollback.
+
+Just execution.
+
+---
+
+## Requirements
+
+- bash
+- tar
+- realpath
+- install (coreutils)
+
+---
+
+## Limitations
+
+- No dry run mode
+- No transactional rollback
+- Minimal validation
+- Trusts JSON definitions
+
+---
+
+## Design Goal
+
+Simple and hackable over abstract and generic.
+
+If it becomes complicated, rewrite it.

@@ -1,49 +1,32 @@
-# Plugin System
+# AutismOS
 
-Plugins define HOW resources are processed.
+A small ecosystem of scripts, configs and deployment tools.
 
-Each plugin is described in JSON format.
+This is not production infrastructure.
+This is not a general-purpose configuration manager.
 
----
+It’s a playground that occasionally produces stable, reusable deployment artifacts.
 
-## Available Plugins
-
-### archive
-Extract archive into a target directory.
-
-Definition:
-:contentReference[oaicite:0]{index=0}
+If it works, we keep it.
+If it breaks, we fix it or delete it.
+If it’s ugly but useful, it stays.
 
 ---
 
-### deployable-archive
-Extract archive and recursively process unpacked content.
+## What This Repo Contains
 
-Definition:
-:contentReference[oaicite:1]{index=1}
+- A lightweight deployment engine
+- A JSON-defined plugin system
+- Utility scripts
+- Config bundles
+- App-specific workarounds
+- Experimental automation
 
----
-
-### file
-Install file with permissions.
-
-Definition:
-:contentReference[oaicite:2]{index=2}
-
----
-
-### symlink
-Create a forced symbolic link.
-
-Definition:
-:contentReference[oaicite:3]{index=3}
+Some parts are reusable.
+Some are experiments.
+Some are both.
 
 ---
 
-## Plugin Philosophy
+## Structure
 
-- Plugins should be small.
-- Plugins should do one thing.
-- Plugins should not assume hidden state.
-
-If you add new plugin types, document them properly.
