@@ -8,9 +8,9 @@ This is not a general-purpose configuration manager.
 
 It’s a playground that occasionally produces stable, reusable deployment artifacts.
 
-If it works, we keep it.
-If it breaks, we fix it or delete it.
-If it’s ugly but useful, it stays.
+- If it works, we keep it.
+- If it breaks, we fix it or delete it... Or keep it. I have no fucking clue what really is happening here.
+- If it’s ugly but useful, it stays.
 
 ---
 
