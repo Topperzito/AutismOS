@@ -30,3 +30,4 @@ Some are both.
 
 ## Structure
 
+HA-HA, no structure. Idk why you're even here.
