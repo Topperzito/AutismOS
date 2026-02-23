@@ -100,3 +100,4 @@ install_pkgs "$PM" "${COMMON_DEPS[@]}"
 install_pkgs "$PM" "${EXTRA_DEPS[@]}"
 
 echo "Dependency installation complete."
+#<--[~|type=script-dep]-->#
