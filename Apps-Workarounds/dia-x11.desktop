@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Dia-X11
+Comment=Dia forced to run under X11 backend
+Exec=env GDK_BACKEND=x11 XDG_SESSION_TYPE=x11 dia
+Icon=dia
+Terminal=false
+Type=Application
+Categories=Graphics;
+StartupNotify=true
