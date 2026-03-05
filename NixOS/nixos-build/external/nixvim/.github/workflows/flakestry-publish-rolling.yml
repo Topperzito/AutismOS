@@ -1,0 +1,25 @@
+name: Publish every git push to Flakestry
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "The existing reference to publish"
+        type: "string"
+        required: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  publish-flake:
+    if: github.event_name != 'push' || github.repository == 'nix-community/nixvim'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
+    steps:
+      - uses: flakestry/flakestry-publish@main
+        with:
+          ref: "${{ inputs.ref || github.ref }}"

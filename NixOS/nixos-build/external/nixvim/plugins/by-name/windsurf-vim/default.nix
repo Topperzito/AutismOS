@@ -1,0 +1,134 @@
+{
+  lib,
+  pkgs,
+  ...
+}:
+let
+  inherit (lib) types;
+
+  keymapsDefinitions = {
+    clear = {
+      default = "<C-]>";
+      description = "Keymap for clearing current suggestion.";
+      command = "vim.fn['codeium#Clear']()";
+    };
+    next = {
+      default = "<M-]>";
+      description = "Keymap for cycling to the next suggestion.";
+      command = "vim.fn['codeium#CycleCompletions'](1)";
+    };
+    prev = {
+      default = "<M-[>";
+      description = "Keymap for cycling to the previous suggestion.";
+      command = "vim.fn['codeium#CycleCompletions'](-1)";
+    };
+    accept = {
+      default = "<Tab>";
+      description = "Keymap for inserting the proposed suggestion.";
+      command = "vim.fn['codeium#Accept']()";
+    };
+    complete = {
+      default = "<M-Bslash>";
+      description = "Keymap for manually triggering the suggestion.";
+      command = "vim.fn['codeium#Complete']()";
+    };
+  };
+in
+lib.nixvim.plugins.mkVimPlugin {
+  name = "windsurf-vim";
+  globalPrefix = "codeium_";
+  description = "Free, ultrafast Copilot alternative for Vim and Neovim.";
+
+  maintainers = [ lib.maintainers.GaetanLepage ];
+
+  # TODO: introduced 2025-04-19
+  inherit ((import ./deprecations.nix { inherit lib; })) imports;
+
+  settingsOptions = {
+    bin = lib.mkOption {
+      type = with types; nullOr str;
+      default = lib.getExe' pkgs.codeium "codeium_language_server";
+      defaultText = lib.literalExpression ''lib.getExe' pkgs.codeium "codeium_language_server"'';
+      description = "The path to the codeium language server executable.";
+    };
+
+    filetypes =
+      lib.nixvim.defaultNullOpts.mkAttrsOf types.bool
+        {
+          help = false;
+          gitcommit = false;
+          gitrebase = false;
+          "." = false;
+        }
+        ''
+          A dictionary mapping whether codeium should be enabled or disabled in certain filetypes.
+          This can be used to opt out of completions for certain filetypes.
+        '';
+
+    manual = lib.nixvim.defaultNullOpts.mkBool false ''
+      If true, codeium completions will never automatically trigger.
+    '';
+
+    no_map_tab = lib.nixvim.defaultNullOpts.mkBool false ''
+      Whether to disable the `<Tab>` keybinding.
+    '';
+
+    idle_delay = lib.nixvim.defaultNullOpts.mkPositiveInt 75 ''
+      Delay in milliseconds before autocompletions are shown (limited by language server to a
+      minimum of 75).
+    '';
+
+    render = lib.nixvim.defaultNullOpts.mkBool true ''
+      A global boolean flag that controls whether codeium renders are enabled or disabled.
+    '';
+
+    tab_fallback = lib.nixvim.mkNullOrOption types.str ''
+      The fallback key when there is no suggestion display in `codeium#Accept()`.
+
+      Default: "\<C-N>" when a popup menu is visible, else "\t".
+    '';
+
+    disable_bindings = lib.nixvim.defaultNullOpts.mkBool false ''
+      Whether to disable default keybindings.
+    '';
+  };
+
+  extraOptions = {
+    keymaps = lib.mapAttrs (
+      optionName: v:
+      lib.nixvim.defaultNullOpts.mkStr v.default ''
+        ${v.description}
+        Command: `${v.command}`
+      ''
+    ) keymapsDefinitions;
+  };
+
+  extraConfig = cfg: {
+    plugins.windsurf-vim.settings.enabled = true;
+
+    keymaps =
+      let
+        processKeymap =
+          optionName: v:
+          lib.optional (v != null) {
+            key = v;
+            action =
+              let
+                inherit (keymapsDefinitions.${optionName}) command;
+              in
+              lib.nixvim.mkRaw "function() ${command} end";
+          };
+
+        keymapsList = lib.flatten (lib.mapAttrsToList processKeymap cfg.keymaps);
+
+        defaults = {
+          mode = "i";
+          options = {
+            silent = true;
+            expr = true;
+          };
+        };
+      in
+      lib.nixvim.keymaps.mkKeymaps defaults keymapsList;
+  };
+}

@@ -1,0 +1,95 @@
+name: Build & deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.lock"
+      - "**.nix"
+      - "docs/**"
+      - "modules/**"
+
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig.json"
+      - "astro.config.ts"
+
+      - ".github/workflows/website.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.lock"
+      - "**.nix"
+      - "docs/**"
+      - "modules/**"
+
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig.json"
+      - "astro.config.ts"
+
+      - ".github/workflows/website.yml"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Whether to deploy the website after building
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    name: Build site
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Update options data
+        run: |
+          ./dev/update-docs-data.sh main
+          ./dev/update-docs-data.sh 25.11 "github:catppuccin/nix/release-25.11?dir=dev/"
+
+      - name: Install dependencies
+        run: |
+          nix develop .#ci --command pnpm install
+
+      - name: Run build
+        run: |
+          nix develop .#ci --command nrr build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/
+
+  deploy:
+    name: Deploy website
+
+    needs: build
+
+    if: ${{ github.event_name == 'push' || inputs.deploy }}
+
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: github-pages
+      cancel-in-progress: true
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    permissions:
+      id-token: write
+      pages: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

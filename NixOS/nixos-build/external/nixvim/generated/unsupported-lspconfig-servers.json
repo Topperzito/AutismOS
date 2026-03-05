@@ -1,0 +1,19 @@
+[
+  "bitbake_ls",
+  "bqnlsp",
+  "bufls",
+  "cadence",
+  "clarity_lsp",
+  "codeqlls",
+  "delphi_ls",
+  "drools_lsp",
+  "erlangls",
+  "haxe_language_server",
+  "leanls",
+  "openedge_ls",
+  "pkgbuild_language_server",
+  "relay_lsp",
+  "sourcery",
+  "vdmj",
+  "vuels"
+]

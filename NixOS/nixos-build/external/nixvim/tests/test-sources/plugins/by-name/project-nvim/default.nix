@@ -1,0 +1,62 @@
+{
+  empty = {
+    # ERROR: (project.util.history.write_history): No data available to write!
+    test.runNvim = false;
+
+    plugins.project-nvim = {
+      enable = true;
+
+      # The default datapath is unwritable in the sandbox
+      settings.datapath.__raw = "os.getenv('TMPDIR')";
+    };
+  };
+
+  telescopeEnabled = {
+    # ERROR: (project.util.history.write_history): No data available to write!
+    test.runNvim = false;
+
+    plugins.telescope = {
+      enable = true;
+    };
+    plugins.project-nvim = {
+      enable = true;
+      enableTelescope = true;
+
+      # The default datapath is unwritable in the sandbox
+      settings.datapath.__raw = "os.getenv('TMPDIR')";
+    };
+    plugins.web-devicons.enable = true;
+  };
+
+  defaults = {
+    # E5113: Error while calling lua chunk:
+    # ...NeovimPackages/start/project.nvim/lua/project/config.lua:48:
+    # (project.util.history.open_history): History directory unavailable!
+    test.runNvim = false;
+
+    plugins.project-nvim = {
+      enable = true;
+      settings = {
+        manual_mode = false;
+        lsp = {
+          enabled = true;
+          ignore.__empty = { };
+        };
+        patterns = [
+          ".git"
+          "_darcs"
+          ".hg"
+          ".bzr"
+          ".svn"
+          "Makefile"
+          "package.json"
+        ];
+        exclude_dirs.__empty = { };
+        show_hidden = false;
+        silent_chdir = true;
+        scope_chdir = "global";
+        datapath.__raw = "vim.fn.stdpath('data')";
+      };
+    };
+  };
+}

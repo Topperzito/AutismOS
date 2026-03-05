@@ -1,0 +1,459 @@
+{
+  unpackaged = [
+    "ada_ls"
+    "agda_ls"
+    "alloy_ls"
+    "anakin_language_server"
+    "antlersls"
+    "ansiblels"
+    "apex_ls"
+    "autohotkey_lsp"
+    "awk_ls"
+    "azure_pipelines_ls"
+    "bacon_ls"
+    "basics_ls"
+    "bazelrc_lsp"
+    "bicep" # Bicep.Cli is packaged, but not Bicep.LangServer
+    "bqls"
+    "bright_script"
+    "brioche"
+    "bsl_ls"
+    "buddy_ls"
+    "bzl"
+    "c3_lsp"
+    "cairo_ls"
+    "cds_lsp"
+    "cir_lsp_server"
+    "circom-lsp"
+    "clarinet"
+    "cobol_ls"
+    "coffeesense"
+    "contextive"
+    # coqPackages.coq-lsp is unavailable since the bump to coq 9.0: https://github.com/NixOS/nixpkgs/pull/389454
+    "coq_lsp"
+    "cspell_ls"
+    "css_variables"
+    "cssmodules_ls"
+    "cucumber_language_server"
+    "custom_elements_ls"
+    "cypher_ls"
+    "daedalus_ls"
+    "dcmls"
+    "debputy"
+    "djls"
+    "djlsp"
+    "ds_pinyin_lsp"
+    "dts_lsp"
+    "ecsact"
+    "ember"
+    "esbonio"
+    "expert"
+    "facility_language_server"
+    "fennel_language_server"
+    "flux_lsp"
+    "foam_ls"
+    "fsharp_language_server"
+    "gdscript"
+    "gdshader_lsp"
+    "gh_actions_ls"
+    "ghdl_ls"
+    "ginko_ls"
+    "gitlab_duo"
+    "glasgow"
+    "glint"
+    "gnls"
+    "gn_language_server"
+    "gradle_ls"
+    "grammarly"
+    "graphql" # nodePackages.graphql-language-service-cli was removed in https://github.com/NixOS/nixpkgs/pull/382557
+    "groovyls"
+    "guile_ls"
+    "hdl_checker"
+    "herb_ls"
+    "hhvm"
+    "hie"
+    "hlasm"
+    "home_assistant"
+    "hoon_ls"
+    "hydra_lsp"
+    "hylo_ls"
+    "intelephense"
+    "janet_lsp"
+    "jinja_lsp"
+    "julials"
+    "kcl"
+    "kotlin_lsp"
+    "kulala_ls"
+    "laravel_ls"
+    "lean3ls"
+    "lelwel_ls"
+    "ltex_plus"
+    "lwc_ls"
+    "m68k"
+    "marko-js"
+    "mdx_analyzer"
+    "millet"
+    "mm0_ls"
+    "mojo"
+    "motoko_lsp"
+    "move_analyzer"
+    "msbuild_project_tools_server"
+    "mutt_ls"
+    "nelua_lsp"
+    "nextflow_ls"
+    "nomad_lsp"
+    "ntt"
+    "nxls"
+    "opencl_ls"
+    "openscad_ls"
+    "oso"
+    "pact_ls"
+    "pasls"
+    "pbls"
+    "perlls"
+    "phptools"
+    "pico8_ls"
+    "please"
+    "pli"
+    "poryscript_pls"
+    "powershell_es"
+    "prismals"
+    "prolog_ls"
+    "prosemd_lsp"
+    "pug"
+    "pony_language_server"
+    "puppet"
+    "purescriptls"
+    "pyre"
+    "r_language_server"
+    "racket_langserver"
+    "raku_navigator"
+    "reason_ls"
+    "remark_ls"
+    "rnix"
+    "robotcode"
+    "robotframework_ls"
+    "roc_ls"
+    "rome"
+    "rpmspec"
+    "ruff_lsp" # deprecated and removed from nixpkgs
+    "salt_ls"
+    "scry" # deprecated and removed from nixpkgs
+    "selene3p_ls"
+    "sixtyfps"
+    "slangd"
+    "smarty_ls"
+    "smithy_ls"
+    "snakeskin_ls"
+    "snyk_ls"
+    "solang"
+    "solidity"
+    "solidity_ls"
+    "solidity_ls_nomicfoundation"
+    "somesass_ls"
+    "sorbet"
+    "spyglassmc_language_server"
+    "sqlls"
+    "steep"
+    "stimulus_ls"
+    "stylua3p_ls"
+    "svlangserver"
+    "tabby_ml"
+    "termux_language_server"
+    "textlsp"
+    "theme_check"
+    "tsp_server"
+    "turbo_ls"
+    "turtle_ls"
+    # typst-lsp has been removed from nixpkgs as the project is archived
+    "typst_lsp"
+    "tvm_ffi_navigator"
+    "twiggy_language_server"
+    "ungrammar_languageserver"
+    "unison" # Unison is packaged, but the lsp is not managed by neovim
+    "unocss"
+    "uvls"
+    "v_analyzer"
+    "veridian"
+    "vespa_ls"
+    "visualforce_ls"
+    # coqPackages.vscoq-language-server is unavailable since the bump to coq 9.0: https://github.com/NixOS/nixpkgs/pull/389454
+    "vscoqtop"
+    "wasm_language_tools"
+    "wc_language_server"
+    "yang_lsp"
+    "yls"
+    "ziggy"
+    "ziggy_schema"
+  ];
+
+  packages = {
+    aiken = "aiken";
+    air = "air-formatter";
+    angularls = "angular-language-server";
+    arduino_language_server = "arduino-language-server";
+    asm_lsp = "asm-lsp";
+    ast_grep = "ast-grep";
+    astro = "astro-language-server";
+    atlas = "atlas";
+    atopile = "atopile";
+    autotools_ls = "autotools-language-server";
+    ballerina = "ballerina";
+    basedpyright = "basedpyright";
+    bashls = "bash-language-server";
+    beancount = "beancount-language-server";
+    biome = "biome";
+    bitbake_language_server = "bitbake-language-server";
+    blueprint_ls = "blueprint-compiler";
+    buck2 = "buck2";
+    buf_ls = "buf";
+    ccls = "ccls";
+    clangd = "clang-tools";
+    clojure_lsp = "clojure-lsp";
+    cmake = "cmake-language-server";
+    codebook = "codebook";
+    copilot = "copilot-language-server";
+    crystalline = "crystalline";
+    csharp_ls = "csharp-ls";
+    cssls = "vscode-langservers-extracted";
+    cue = "cue";
+    dafny = "dafny";
+    dagger = "cuelsp";
+    dartls = "dart";
+    denols = "deno";
+    dhall_lsp_server = "dhall-lsp-server";
+    diagnosticls = "diagnostic-languageserver";
+    digestif = [
+      "lua54Packages"
+      "digestif"
+    ];
+    docker_compose_language_service = "docker-compose-language-service";
+    docker_language_server = "docker-language-server";
+    dockerls = "dockerfile-language-server";
+    dolmenls = [
+      "ocamlPackages"
+      "dolmen_lsp"
+    ];
+    dotls = "dot-language-server";
+    dprint = "dprint";
+    earthlyls = "earthlyls";
+    efm = "efm-langserver";
+    elmls = [
+      "elmPackages"
+      "elm-language-server"
+    ];
+    elixirls = "elixir-ls";
+    elp = "erlang-language-platform";
+    emmet_language_server = "emmet-language-server";
+    emmet_ls = "emmet-ls";
+    emmylua_ls = "emmylua-ls";
+    erg_language_server = "erg";
+    eslint = "vscode-langservers-extracted";
+    fennel_ls = "fennel-ls";
+    fish_lsp = "fish-lsp";
+    flow = "flow";
+    fortls = "fortls";
+    fsautocomplete = "fsautocomplete";
+    fstar = "fstar";
+    futhark_lsp = "futhark";
+    ghcide = [
+      "haskellPackages"
+      "ghcide"
+    ];
+    gitlab_ci_ls = "gitlab-ci-ls";
+    gleam = "gleam";
+    glsl_analyzer = "glsl_analyzer";
+    glslls = "glslls";
+    golangci_lint_ls = "golangci-lint-langserver";
+    gopls = "gopls";
+    graphql = "graphql-language-service-cli";
+    harper_ls = "harper";
+    helm_ls = "helm-ls";
+    hls = "haskell-language-server";
+    html = "vscode-langservers-extracted";
+    htmx = "htmx-lsp";
+    hyprls = "hyprls";
+    idris2_lsp = [
+      "idris2Packages"
+      "idris2Lsp"
+    ];
+    java_language_server = "java-language-server";
+    jdtls = "jdt-language-server";
+    jedi_language_server = [
+      "python3Packages"
+      "jedi-language-server"
+    ];
+    jqls = "jq-lsp";
+    jsonls = "vscode-langservers-extracted";
+    jsonnet_ls = "jsonnet-language-server";
+    just = "just-lsp";
+    koka = "koka";
+    kotlin_language_server = "kotlin-language-server";
+    lean3ls = "lean4";
+    lemminx = "lemminx";
+    lexical = "lexical";
+    lsp_ai = "lsp-ai";
+    ltex = "ltex-ls";
+    lua_ls = "lua-language-server";
+    luau_lsp = "luau-lsp";
+    markdown_oxide = "markdown-oxide";
+    marksman = "marksman";
+    matlab_ls = "matlab-language-server";
+    mesonlsp = "mesonlsp";
+    metals = "metals";
+    mint = "mint";
+    mlir_lsp_server = [
+      "llvmPackages"
+      "mlir"
+    ];
+    mlir_pdll_lsp_server = [
+      "llvmPackages"
+      "mlir"
+    ];
+    muon = "muon";
+    neocmake = "neocmakelsp";
+    nextls = "next-ls";
+    nginx_language_server = "nginx-language-server";
+    nickel_ls = "nls";
+    nil_ls = "nil";
+    nim_langserver = "nimlangserver";
+    nimls = "nimlsp";
+    nixd = "nixd";
+    nushell = "nushell";
+    ocamllsp = [
+      "ocamlPackages"
+      "ocaml-lsp"
+    ];
+    ols = "ols";
+    omnisharp = "omnisharp-roslyn";
+    openscad_lsp = "openscad-lsp";
+    oxfmt = "oxfmt";
+    oxlint = "oxlint";
+    perlnavigator = "perlnavigator";
+    perlpls = [
+      "perlPackages"
+      "PLS"
+    ];
+    pest_ls = "pest-ide-tools";
+    phan = [
+      "phpPackages"
+      "phan"
+    ];
+    phpactor = "phpactor";
+    postgres_lsp = "postgres-language-server";
+    protols = "protols";
+    psalm = [
+      "phpPackages"
+      "psalm"
+    ];
+    pylsp = [
+      "python3Packages"
+      "python-lsp-server"
+    ];
+    pylyzer = "pylyzer";
+    pyrefly = "pyrefly";
+    pyright = "pyright";
+    qmlls = [
+      "kdePackages"
+      "qtdeclarative"
+    ];
+    quick_lint_js = "quick-lint-js";
+    regal = "regal";
+    regols = "regols";
+    rescriptls = "rescript-language-server";
+    # This is not entirely true, but the server is deprecated
+    rls = "rustup";
+    roslyn_ls = "roslyn-ls";
+    rubocop = "rubocop";
+    ruby_lsp = "ruby-lsp";
+    ruff = "ruff";
+    rumdl = "rumdl";
+    rune_languageserver = "rune-languageserver";
+    rust_analyzer = "rust-analyzer";
+    scheme_langserver = [
+      "akkuPackages"
+      "scheme-langserver"
+    ];
+    serve_d = "serve-d";
+    shopify_theme_ls = "shopify-cli";
+    slint_lsp = "slint-lsp";
+    solargraph = [
+      "rubyPackages"
+      "solargraph"
+    ];
+    solc = "solc";
+    sourcekit = "sourcekit-lsp";
+    spectral = "spectral-language-server";
+    sqls = "sqls";
+    sqruff = "sqruff";
+    standardrb = [
+      "rubyPackages"
+      "standard"
+    ];
+    starlark_rust = "starlark-rust";
+    starpls = "starpls";
+    statix = "statix";
+    stylelint_lsp = "stylelint-lsp";
+    stylua = "stylua";
+    superhtml = "superhtml";
+    svelte = "svelte-language-server";
+    svls = "svls";
+    swift_mesonls = "mesonlsp";
+    syntax_tree = [
+      "rubyPackages"
+      "syntax_tree"
+    ];
+    systemd_ls = "systemd-language-server";
+    systemd_lsp = "systemd-lsp";
+    tailwindcss = "tailwindcss-language-server";
+    taplo = "taplo";
+    tblgen_lsp_server = [
+      "llvmPackages"
+      "mlir"
+    ];
+    tclsp = "tclint";
+    teal_ls = [
+      "luaPackages"
+      "teal-language-server"
+    ];
+    templ = "templ";
+    terraform_lsp = "terraform-lsp";
+    terraformls = "terraform-ls";
+    texlab = "texlab";
+    tflint = "tflint";
+    thriftls = "thrift-ls";
+    tilt_ls = "tilt";
+    tinymist = "tinymist";
+    tofu_ls = "tofu-ls";
+    tombi = "tombi";
+    ts_ls = "typescript-language-server";
+    ts_query_ls = "ts_query_ls";
+    tsgo = "typescript-go";
+    ttags = "ttags";
+    ty = "ty";
+    typeprof = "ruby";
+    typos_lsp = "typos-lsp";
+    uiua = "uiua";
+    vacuum = "vacuum-go";
+    vala_ls = "vala-language-server";
+    vale_ls = "vale-ls";
+    vectorcode_server = "vectorcode";
+    verible = "verible";
+    veryl_ls = "veryl";
+    vhdl_ls = "vhdl-ls";
+    vimls = "vim-language-server";
+    vls = "vlang";
+    volar = "vue-language-server";
+    vsrocq = [
+      "rocqPackages"
+      "vsrocq-language-server"
+    ];
+    vtsls = "vtsls";
+    vue_ls = "vue-language-server";
+    wgsl_analyzer = "wgsl-analyzer";
+    yamlls = "yaml-language-server"; # Not available in coq 9.0: https://github.com/NixOS/nixpkgs/pull/389454
+    zk = "zk";
+    zls = "zls";
+    zuban = "zuban";
+  };
+}

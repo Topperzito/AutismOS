@@ -1,0 +1,53 @@
+name: Schedule update for other branches
+on:
+  # Runs every Saturday at noon
+  schedule:
+    - cron: "0 12 * * SAT"
+
+# Allow running workflows
+permissions:
+  contents: read
+  actions: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Compute list of branches
+    runs-on: ubuntu-24.04-arm
+    if: github.repository == 'nix-community/nixvim'
+    outputs:
+      branches: ${{ steps.list-branches.outputs.result }}
+    steps:
+      - name: Checkout version-info
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: version-info.toml
+          sparse-checkout-cone-mode: false
+      - name: List stable branches
+        id: list-branches
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            yq --no-colors --output-format=json \
+              '[ .versions[].branch | select(. != "main") ]' \
+              version-info.toml
+  update:
+    name: Trigger update on ${{ matrix.branch }}
+    runs-on: ubuntu-24.04-arm
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON(needs.prepare.outputs.branches) }}
+    steps:
+      - name: workflow dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          repo: ${{ github.repository }}
+          branch: ${{ matrix.branch }}
+        run: |
+          gh --repo "$repo" workflow run \
+            update.yml --ref "$branch"

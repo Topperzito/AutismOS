@@ -1,0 +1,199 @@
+# This file contains a list of nixvim configurations that should be included in the "user configs" section of the docs
+
+# This example shows the available options
+[[example]]
+owner = "github username" # Required
+repo = "repo name"        # Required unless `url` is used instead
+# url = "https://github.com/owner/repo
+title = "My awesome nix config" # Defaults to `repo`. Required if `repo` is not defined
+description = """ # Optional
+A brief description for my config.
+Linebreaks will be replaced with spaces.
+But it still should not be _too_ long...
+
+Note: You can use markdown in both the title and description!
+"""
+
+[[config]]
+owner = "cirius-nix"
+repo = "cirius-nix"
+description = "Managed by Nix, Snowfall Lib and SOPS to provide the best user experience"
+
+[[config]]
+owner = "ahwxorg"
+repo = "nixvim-config"
+
+[[config]]
+owner = "alisonjenkins"
+repo = "neovim-nix-flake"
+
+[[config]]
+owner = "bkp5190"
+repo = "Home-Manager-Configs"
+description = "Home-manager"
+
+[[config]]
+owner = "dc-tec"
+repo = "nixvim"
+description = "NixVim config, inspired by some of the contributors in this list and LazyVIM"
+
+[[config]]
+owner = "elythh"
+repo = "nixvim"
+
+[[config]]
+owner = "fred-drake"
+repo = "neovim"
+description = "NixVim config, with format/lsp/debug configurations for Rust, Go, Python and more"
+
+[[config]]
+owner = "GaetanLepage"
+title = "nix-config"
+description = "Home-manager"
+url = "https://github.com/GaetanLepage/nix-config/tree/master/modules/home/core/programs/neovim"
+
+[[config]]
+owner = "gwg313"
+repo = "nvim-nix"
+
+[[config]]
+owner = "hbjydev"
+repo = "hvim"
+
+[[config]]
+owner = "JMartJonesy"
+repo = "kickstart.nixvim"
+description = "An implementation of kickstart.nvim using nixvim"
+
+[[config]]
+owner = "khaneliman"
+repo = "khanelivim"
+description = "Constantly tweaked jack of all trades development focused configuration."
+
+[[config]]
+owner = "mathjiajia"
+repo = "nix-darwin"
+description = "A nixvim configuration, with nix-darwin and home-manager"
+
+[[config]]
+owner = "MikaelFangel"
+repo = "nixvim-config"
+description = "An easy-setup configuration for NixVim, focused on straightforward customization"
+
+[[config]]
+owner = "nicolas-goudry"
+repo = "nixvim-config"
+description = "Heavily inspired by AstroNvim"
+
+[[config]]
+owner = "NikolayGalkin"
+repo = "gnvim"
+description = "Clean and simple Neovim configuration"
+
+[[config]]
+owner = "niksingh710"
+repo = "nvix"
+description = "Ported from a lazy-based lua config. Contains examples of most use cases, including custom, nixpkgs, & nixvim plugins."
+
+[[config]]
+owner = "pete3n"
+repo = "nixvim-flake"
+
+[[config]]
+owner = "r6t"
+title = "nixos-r6t"
+description = "Single-file nixvim config, uses home-manager module in a NixOS flake"
+url = "https://github.com/r6t/nixos-r6t/blob/main/modules/home/nixvim/default.nix"
+
+[[config]]
+owner = "redyf"
+repo = "Neve"
+description = "Meticulously crafted custom configuration for Nixvim"
+
+[[config]]
+owner = "siph"
+repo = "nixvim-flake"
+
+[[config]]
+owner = "spector700"
+repo = "Akari"
+description = "Inspired from LazyVim with parts yoinked from other NixVim configs"
+
+[[config]]
+owner = "Tanish2002"
+repo = "neovim-config"
+
+[[config]]
+owner = "Theaninova"
+title = "Modular Presets"
+url = "https://github.com/Theaninova/TheaninovOS/tree/master/modules/home-manager/modules/nixvim"
+description = "Collection of mostly independent preset modules that make up my from-scratch Neovim setup. Drops into existing setups without breaking stuff because presets must be enabled individually."
+
+[[config]]
+owner = "traxys"
+title = "Nixfiles"
+url = "https://github.com/traxys/Nixfiles/tree/master/neovim"
+
+[[config]]
+owner = "veeronniecaw"
+title = "ronvim"
+url = "https://codeberg.org/veeronniecaw/ronvim"
+
+[[config]]
+owner = "ZainKergaye"
+title = "nixosdotfiles"
+url = "https://github.com/ZainKergaye/nixosdotfiles/tree/master/user/programs/nixvim"
+description = "NixVim editor primarily for Java and Asciidoc"
+
+[[config]]
+owner = "Yohh"
+repo = "nix-confix"
+description = "Nix config with nixvim and home-manager, inspired by some of the contributors in this list"
+
+[[config]]
+owner = "LudovicDeMatteis"
+title = ".dotfiles"
+url = "https://github.com/LudovicDeMatteis/.dotfiles/tree/master/modules/neovim"
+description = "NixVim with Home-manager"
+
+[[config]]
+owner = "XhuyZ"
+title = "nixvim"
+description = "Nixvim flake for neovim, inspired by LazyVim with keymaps almost the same"
+url = "https://github.com/XhuyZ/nixvim"
+
+[[config]]
+owner = "wverac"
+title = "BOFH NixVim"
+description = "Minimalist NixVim setup, featuring a curated set of essential plugins"
+url = "https://github.com/wverac/nixvim"
+
+[[config]]
+owner = "r17x"
+title = "development universe"
+description = "Nix configuration for development, including NixVim"
+url = "https://github.com/r17x/universe/tree/main/nix/nvim.nix"
+
+[[config]]
+owner = "c4patino"
+title = "yumevim"
+description = "nixvim flake, rather minimalist translation of my lua configuration"
+url = "https://github.com/c4patino/nixvim"
+
+[[config]]
+owner = "literally-sai"
+title = "vermvim"
+description = "nixvim flake, with custom base16 loader"
+url = "https://github.com/literally-sai/vermvim"
+
+[[config]]
+owner = "carl0xs"
+title = "nixcfg"
+description = "Nix configuration setup, including nixvim"
+url = "https://github.com/carl0xs/nixcfg/blob/main/modules/workstation/neovim.nix"
+
+[[config]]
+owner = "ar-at-localhost"
+title = "np"
+description = "Nixvim setup, focused on Project Oriented Development"
+url = "https://github.com/ar-at-localhost/np"

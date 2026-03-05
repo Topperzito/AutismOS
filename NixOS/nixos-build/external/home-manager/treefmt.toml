@@ -1,0 +1,25 @@
+on-unmatched = "info"
+tree-root-file = "release.json"
+
+[formatter.nixfmt]
+command = "nixfmt"
+includes = [ "*.nix" ]
+
+[formatter.deadnix]
+command = "deadnix"
+options = [ "--edit", "--no-lambda-arg", "--no-lambda-pattern-names" ]
+includes = [ "*.nix" ]
+
+[formatter.nixf-diagnose]
+command = "nixf-diagnose"
+options = [
+  "--auto-fix",
+  "--ignore=sema-unused-def-lambda-witharg-formal",
+  "--ignore=sema-unused-def-lambda-noarg-formal",
+  "--ignore=sema-primop-overridden"
+]
+includes = [ "*.nix" ]
+
+[formatter.keep-sorted]
+command = "keep-sorted"
+includes = [ "*" ]

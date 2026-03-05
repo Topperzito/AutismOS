@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "main"
+      - "release-*"
+    paths:
+      - "**.nix"
+      - "flake.lock"
+
+      - "pkgs/**"
+
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches:
+      - "main"
+      - "release-*"
+    paths:
+      - "**.nix"
+      - "flake.lock"
+
+      - "pkgs/**"
+
+      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+jobs:
+  flake:
+    name: Run Flake checks (${{ matrix.system }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            system: aarch64-darwin
+          - os: ubuntu-latest
+            system: x86_64-linux
+
+        os: [macos-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Maximize Space
+        uses: easimon/maximize-build-space@v10
+        if: ${{ matrix.os != 'macos-latest' }}
+        with:
+          overprovision-lvm: true
+          remove-android: true
+          remove-dotnet: true
+          remove-codeql: true
+          remove-haskell: true
+          remove-docker-images: true
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install Cachix
+        uses: cachix/cachix-action@v16
+        with:
+          name: catppuccin
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Run tests
+        env:
+          SYSTEM: ${{ matrix.system }}
+        # Some modules require IFD, so only evaluate for the current system
+        run: |
+          nix run \
+            --inputs-from . \
+            nixpkgs#nix-fast-build -- \
+            --skip-cached --no-nom \
+            --flake "./dev#checks.$SYSTEM"
+
+  release-gate:
+    name: Release Gate
+    needs: [flake]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Exit with error
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1

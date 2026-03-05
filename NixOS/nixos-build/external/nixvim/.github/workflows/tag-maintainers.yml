@@ -1,0 +1,99 @@
+name: Sync Plugin Maintainer Reviewers
+
+on:
+  pull_request_target:
+    types: [opened, ready_for_review, reopened, synchronize]
+
+# Concurrency settings to ensure that only one instance of this workflow runs per PR.
+# If a new commit is pushed, it cancels the previous run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # To checkout code
+  pull-requests: write # To add/remove reviewers and comment
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tag-maintainers:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.state == 'open'
+    steps:
+      # Generate a GitHub App token if configured, so we can use custom `bot`.
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@v2
+        if: vars.CI_APP_ID
+        id: app-token
+        with:
+          app-id: ${{ vars.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-members: read
+
+      # Checkout the code from the base branch.
+      # This is a security measure for `pull_request_target` to run trusted code.
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.base_ref }}
+
+      # Install Nix
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      # Identify which plugin files have changed in the PR.
+      - name: Get changed plugin files
+        id: changed-files
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          CHANGED_FILES=$(gh pr diff "$PR_NUM" --name-only || true)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          {
+            echo "changed_files<<EOF"
+            echo "$CHANGED_FILES"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      # Evaluate Nix code to find maintainers for the changed files.
+      - name: Extract maintainers from changed files
+        id: extract-maintainers
+        env:
+          PR_AUTHOR: "${{ github.event.pull_request.user.login }}"
+          CHANGED_FILES: "${{ steps.changed-files.outputs.changed_files }}"
+        run: |
+          MAINTAINERS_LIST=$(./ci/tag-maintainers/extract-maintainers.py \
+            --changed-files "$CHANGED_FILES" \
+            --pr-author "$PR_AUTHOR")
+
+          echo "maintainers=$MAINTAINERS_LIST" >> "$GITHUB_OUTPUT"
+
+      # Manage reviewers
+      - name: Manage reviewers
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          MAINTAINERS: ${{ steps.extract-maintainers.outputs.maintainers }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
+          BOT_NAME: ${{ steps.app-token.outputs.app-slug || 'github-actions' }}
+        run: |
+          ./ci/tag-maintainers/manage-reviewers.py \
+            --owner "$OWNER" \
+            --repo "$REPO" \
+            --pr-number "$PR_NUMBER" \
+            --pr-author "$PR_AUTHOR" \
+            --current-maintainers "$MAINTAINERS" \
+            --changed-files "$CHANGED_FILES" \
+            --bot-user-name "$BOT_NAME"

@@ -1,0 +1,54 @@
+{
+  lib,
+  ...
+}:
+let
+  inherit (lib.nixvim) defaultNullOpts;
+in
+lib.nixvim.plugins.mkNeovimPlugin {
+  name = "lean";
+  package = "lean-nvim";
+  description = "Neovim support for the Lean theorem prover.";
+
+  maintainers = [ lib.maintainers.khaneliman ];
+
+  dependencies = [ "lean" ];
+
+  settingsOptions = {
+    stderr = {
+      on_lines = defaultNullOpts.mkLuaFn "nil" ''
+        A callback which will be called with (multi-line) stderr output.
+      '';
+    };
+  };
+
+  settingsExample = {
+    settings = {
+      lsp = {
+        enable = true;
+      };
+      ft = {
+        default = "lean";
+        nomodifiable = [ "_target" ];
+      };
+      abbreviations = {
+        enable = true;
+        extra = {
+          wknight = "♘";
+        };
+      };
+      mappings = false;
+      infoview = {
+        horizontal_position = "top";
+        separate_tab = true;
+        indicators = "always";
+      };
+      progress_bars = {
+        enable = false;
+      };
+      stderr = {
+        on_lines.__raw = "function(lines) vim.notify(lines) end";
+      };
+    };
+  };
+}

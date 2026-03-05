@@ -1,0 +1,19 @@
+[book]
+authors = []
+language = "en"
+src = "."
+title = "nixvim docs"
+
+[output.html]
+site-url = "@SITE_URL@"
+additional-css = ["custom.css"]
+git-repository-url = "https://github.com/nix-community/nixvim"
+
+# Redirect targets must be relative to their origin;
+# absolute paths can break with different baseHrefs.
+[output.html.redirect]
+"/user-guide/helpers.html" = "../lib/nixvim/index.html" # Since #3049
+
+[output.html.fold]
+enable = true
+level = 0

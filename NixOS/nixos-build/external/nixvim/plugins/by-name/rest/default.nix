@@ -1,0 +1,208 @@
+{ config, lib, ... }:
+let
+  inherit (lib) types;
+  inherit (lib.nixvim) defaultNullOpts;
+in
+lib.nixvim.plugins.mkNeovimPlugin {
+  name = "rest";
+  moduleName = "rest-nvim";
+  package = "rest-nvim";
+  description = "A very fast, powerful, extensible and asynchronous Neovim HTTP client.";
+
+  maintainers = [ lib.maintainers.GaetanLepage ];
+
+  dependencies = [ "curl" ];
+
+  settingsOptions = {
+    custom_dynamic_variables = lib.mkOption {
+      type = with types; nullOr (maybeRaw (attrsOf strLuaFn));
+      default = null;
+      example = {
+        "$timestamp" = "os.time";
+        "$randomInt" = ''
+          function()
+            return math.random(0, 1000)
+          end
+        '';
+      };
+      description = ''
+        Custom dynamic variables. Keys are variable names and values are lua functions.
+
+        default: `{}`
+      '';
+    };
+
+    request = {
+      skip_ssl_verification = defaultNullOpts.mkBool false ''
+        Skip SSL verification, useful for unknown certificates.
+      '';
+
+      hooks = {
+        encode_url = defaultNullOpts.mkBool true ''
+          Encode URL before making request.
+        '';
+
+        user_agent = defaultNullOpts.mkStr (lib.nixvim.literalLua ''"rest.nvim v" .. require("rest-nvim.api").VERSION'') ''
+          Set `User-Agent` header when it is empty.
+        '';
+
+        set_content_type = defaultNullOpts.mkBool true ''
+          Set `Content-Type` header when it is empty and body is provided.
+        '';
+      };
+    };
+
+    response = {
+      hooks = {
+        decode_url = defaultNullOpts.mkBool true ''
+          Encode URL before making request.
+        '';
+
+        format = defaultNullOpts.mkBool true ''
+          Format the response body using `gq` command.
+        '';
+      };
+
+    };
+
+    clients = defaultNullOpts.mkAttrsOf types.anything {
+      curl = {
+        statistics = [
+          {
+            id = "time_total";
+            winbar = "take";
+            title = "Time taken";
+          }
+          {
+            id = "size_download";
+            winbar = "size";
+            title = "Download size";
+          }
+        ];
+        opts = {
+          set_compressed = false;
+        };
+      };
+    } "Table of client configurations.";
+
+    cookies = {
+      enable = defaultNullOpts.mkBool true ''
+        Whether to enable cookies support or not.
+      '';
+
+      path = defaultNullOpts.mkStr (lib.nixvim.literalLua ''vim.fs.joinpath(vim.fn.stdpath("data") --[[@as string]], "rest-nvim.cookies")'') ''
+        Environment variables file pattern for `telescope.nvim`.
+      '';
+    };
+
+    env = {
+      enable = defaultNullOpts.mkBool true ''
+        Whether to enable env file support or not.
+      '';
+
+      pattern = defaultNullOpts.mkStr "\\.env$" ''
+        Environment variables file pattern for `telescope.nvim`.
+      '';
+    };
+
+    ui = {
+      winbar = defaultNullOpts.mkBool true ''
+        Whether to set winbar to result panes.
+      '';
+
+      keybinds =
+        defaultNullOpts.mkAttrsOf types.anything
+          {
+            prev = "H";
+            next = "L";
+          }
+          ''
+            Mappings for result panes.
+          '';
+    };
+
+    highlight = {
+      enable = defaultNullOpts.mkBool true ''
+        Whether current request highlighting is enabled or not.
+      '';
+
+      timeout = defaultNullOpts.mkUnsignedInt 750 ''
+        Duration time of the request highlighting in milliseconds.
+      '';
+    };
+
+    _log_level = defaultNullOpts.mkNullableWithRaw types.logLevel "warn" ''
+      The logging level name, see `:h vim.log.levels`.
+    '';
+  };
+
+  settingsExample = {
+    request = {
+      skip_ssl_verification = true;
+    };
+    response = {
+      hooks = {
+        format = false;
+      };
+    };
+    clients = {
+      curl = {
+        opts = {
+          set_compressed = true;
+        };
+      };
+    };
+    cookies = {
+      enable = false;
+    };
+    env = {
+      enable = false;
+    };
+    ui = {
+      winbar = false;
+    };
+    _log_level = "info";
+  };
+
+  extraOptions = {
+    enableHttpFiletypeAssociation = lib.mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Sets up the filetype association of `.http` files to trigger treesitter support to enable `rest` functionality.
+      '';
+    };
+
+    enableTelescope = lib.mkEnableOption "telescope integration";
+  };
+
+  # NOTE: plugin uses globals table for configuration
+  callSetup = false;
+
+  extraConfig = cfg: {
+    assertions = lib.nixvim.mkAssertions "plugins.rest" [
+      {
+        assertion = config.plugins.treesitter.enable;
+        message = ''
+          Requires the `http` parser from `plugins.treesitter`, please set `plugins.treesitter.enable`.
+        '';
+      }
+      {
+        assertion = cfg.enableTelescope -> config.plugins.telescope.enable;
+        message = ''
+          You have `plugins.rest.enableTelescope` set to true, but `plugins.telescope.enable` is false.
+          Either disable the telescope integration or enable telescope.
+        '';
+      }
+    ];
+
+    # TODO: There may be some interactions between this & telescope, maybe requiring #2292
+    plugins.rest.luaConfig.post = lib.mkIf cfg.enableTelescope ''require("telescope").load_extension("rest")'';
+
+    globals.rest_nvim = cfg.settings;
+
+    filetype = lib.mkIf cfg.enableHttpFiletypeAssociation {
+      extension.http = "http";
+    };
+  };
+}

@@ -1,0 +1,92 @@
+name: Update lockfiles
+
+on:
+  schedule:
+    # run every friday
+    - cron: "0 0 * * 5"
+  workflow_dispatch:
+
+jobs:
+  flake:
+    name: Update flake.lock
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          # NOTE: Required for subflake
+          install_url: https://releases.nixos.org/nix/nix-2.26.0/install
+
+      - name: Update Flakes
+        run: |
+          nix flake update --flake .
+          nix flake update --flake ./dev
+
+      - name: Create pull request
+        id: create-pull-request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore: update flakes"
+          title: "chore: update flakes"
+          signoff: true
+          sign-commits: true
+          branch: "update-flake-lock"
+
+      - name: Run CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ci.yml \
+            --ref ${{ steps.create-pull-request.outputs.pull-request-branch }}
+
+  ports:
+    name: Update port sources
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          # NOTE: Required for paws
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Update ports
+        run: ./pkgs/paws.py
+
+      - name: Create pull request
+        id: create-pull-request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore: update port sources"
+          title: "chore: update port sources"
+          signoff: true
+          sign-commits: true
+          branch: "update-ports"
+
+      - name: Run CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ci.yml \
+            --ref ${{ steps.create-pull-request.outputs.pull-request-branch }}
